@@ -11,6 +11,7 @@ import androidx.cardview.widget.CardView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.taxcalculator.R;
+import com.example.taxcalculator.database.AppDatabase;
 import com.example.taxcalculator.fragments.HistoryFragment;
 import com.example.taxcalculator.fragments.SettingsFragment;
 import com.example.taxcalculator.models.ProductItem;
@@ -28,8 +29,8 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton btnSettings;
 
     private ProductItem selectedProduct;
-    private final List<ProductItem> history = new ArrayList<>();
     private final List<ProductItem> sample = new ArrayList<>();
+    private AppDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        db = AppDatabase.getInstance(this);
         initSamples();
         bindViews();
         setupListeners();
@@ -66,8 +68,11 @@ public class MainActivity extends AppCompatActivity {
         btnScan.setOnClickListener(v -> simulateScan());
 
         btnHistory.setOnClickListener(v -> {
+
+            List<ProductItem> savedList = db.productDao().getAll();
+            ArrayList<ProductItem> historyList = new ArrayList<>(savedList);
             HistoryFragment fragment =
-                    HistoryFragment.newInstance(new ArrayList<>(history));
+                    HistoryFragment.newInstance(new ArrayList<>(historyList));
 
             findViewById(R.id.fragmentContainer).setVisibility(View.VISIBLE);
 
@@ -83,19 +88,19 @@ public class MainActivity extends AppCompatActivity {
         btnSettings.setOnClickListener(view -> {
             SettingsFragment fragment = new SettingsFragment();
             fragment.show(getSupportFragmentManager(), "settingsBottomSheet");
-            Toast.makeText(this, "Settings clicked", Toast.LENGTH_SHORT).show();
         });
     }
 
     private void simulateScan(){
-        int idx = history.size() % sample.size();
+        int idx = (int) (Math.random() * sample.size());
         ProductItem next = sample.get(idx);
 
         ProductItem item = new ProductItem(next.getName(), next.getBrand(), next.getTotalPrice(), next.getTaxRate());
 
+        db.productDao().insert(item);
         selectedProduct = item;
-        history.add(0, item);
-        runOnUiThread(this::updateProductCard);
+        updateProductCard();
+        Toast.makeText(this, "Saved to History", Toast.LENGTH_SHORT).show();
     }
 
     private void updateProductCard(){
@@ -114,13 +119,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void clearHistory(){
-        history.clear();
+        db.productDao().deleteAll();
         selectedProduct = null;
         updateProductCard();
-    }
 
-    public List<ProductItem> getHistory(){
-        return history;
+        Toast.makeText(this, "History Cleared", Toast.LENGTH_SHORT).show();
     }
 
     @Override
