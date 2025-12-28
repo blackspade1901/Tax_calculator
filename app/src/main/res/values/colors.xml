@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-        <color name="colorPrimary">#42A5F5</color>       <!-- Sky Blue -->
-        <color name="colorPrimaryDark">#1E88E5</color>   <!-- Darker Sky Blue -->
-        <color name="colorAccent">#90CAF9</color>        <!-- Light Sky Blue -->
-        <color name="textPrimary">#0A0A0A</color>        <!-- Almost Black -->
-        <color name="textSecondary">#424242</color>      <!-- Dark Grey -->
-        <color name="buttonColor">#1E88E5</color>        <!-- Button Blue -->
-        <color name="backgroundColor">#E3F2FD</color>    <!-- Very Light Sky Blue -->
-        <color name="errorColor">#E53935</color>         <!-- Red for Errors -->
-        <color name="successColor">#43A047</color>       <!-- Green for Success -->
-        <color name="warningColor">#FB8C00</color>       <!-- Orange for Warnings -->
-        <color name="divider">#BDBDBD</color>       <!-- Light Grey for Dividers -->
-        <color name="netPriceBg">#E8F4FF</color>     <!-- Very Light Blue for Net Price Background -->
+        <color name="colorPrimary">#1A237E</color>
+        <color name="colorPrimaryDark">#000051</color>
+        <color name="colorAccent">#FFB300</color>
+        <color name="textPrimary">#121212</color>
+        <color name="textSecondary">#757575</color>
+        <color name="textInverse">#FFFFFF</color>
+        <color name="backgroundColor">#F5F6F8</color>
+        <color name="surfaceColor">#FFFFFF</color>
+        <color name="divider">#E0E0E0</color>
+
+        <color name="buttonColor">#1A237E</color>
+        <color name="netPriceBg">#E0F2F1</color>
+        <color name="errorColor">#D32F2F</color>
+        <color name="successColor">#388E3C</color>
 </resources>

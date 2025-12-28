@@ -1,262 +1,232 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/backgroundColor"
     tools:context=".activities.MainActivity">
 
-    <!-- Header Bar -->
-    <LinearLayout
-        android:id="@+id/headerBar"
-        android:layout_width="0dp"
-        android:layout_height="60dp"
-        android:paddingHorizontal="16dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:background="@color/colorPrimary"
+    <TextView
+        android:id="@+id/appTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="32dp"
+        android:text="@string/app_title"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:textColor="@color/colorPrimary"
+        android:lineSpacingExtra="-4dp"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintStart_toStartOf="parent"/>
 
-        <TextView
-            android:id="@+id/title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Tax Calculator"
-            android:textColor="@android:color/white"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+    <ImageButton
+        android:id="@+id/settingBtn"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="32dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_settings"
+        android:contentDescription="@string/settings"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/textSecondary" />
 
-        <ImageButton
-            android:id="@+id/settingBtn"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@android:color/transparent"
-            android:src="@drawable/ic_settings"
-            android:contentDescription="Settings"/>
-    </LinearLayout>
-
-    <!-- Content Area -->
     <ScrollView
         android:id="@+id/scrollView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:padding="20dp"
-        app:layout_constraintTop_toBottomOf="@id/headerBar"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="24dp"
+        android:clipToPadding="false"
+        app:layout_constraintTop_toBottomOf="@id/appTitle"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
-            android:id="@+id/content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:gravity="center_horizontal">
+            android:paddingBottom="80dp">
 
-            <!-- Scan Button -->
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/scanBtn"
-                style="@style/MyPrimaryButton"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:gravity="center"
-                android:text="Scan Code" />
+                android:layout_height="64dp"
+                android:text="@string/scan_product_code"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:backgroundTint="@color/colorPrimary"
+                app:cornerRadius="16dp"
+                app:elevation="8dp"
+                android:layout_marginBottom="32dp"/>
 
-            <Space
-                android:layout_width="match_parent"
-                android:layout_height="40dp" />
-
-            <!-- Product Info Card -->
-            <LinearLayout
+            <androidx.cardview.widget.CardView
                 android:id="@+id/productCard"
-                android:visibility="gone"
-                android:orientation="vertical"
-                android:padding="20dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:elevation="3dp"
-                android:layout_marginBottom="20dp"
-                android:background="@color/colorAccent"
-                android:backgroundTint="@color/colorAccent">
+                app:cardCornerRadius="20dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/surfaceColor"
+                android:visibility="gone"
+                android:layout_marginBottom="24dp">
 
-                <!-- Product fields -->
-                <TextView
-                    android:id="@+id/txtNamelabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Product Name:"
-                    android:textColor="@color/textSecondary"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/txtName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/textPrimary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="12dp" />
-
-                <TextView
-                    android:id="@+id/txtBrandLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Brand:"
-                    android:textColor="@color/textSecondary"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/txtBrand"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/textPrimary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="12dp" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/divider" />
-
-                <!-- Tax Info Section -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_marginTop="12dp">
+                    android:padding="24dp">
 
-                    <!-- Total Price -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/scanned_item"
+                        android:textSize="12sp"
+                        android:letterSpacing="0.1"
+                        android:textColor="@color/textSecondary"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:id="@+id/txtName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/product_name_placeholder"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/textPrimary"
+                        android:layout_marginTop="4dp"/>
+
+                    <TextView
+                        android:id="@+id/txtBrand"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/brand_name_placeholder"
+                        android:textSize="14sp"
+                        android:textColor="@color/colorPrimary"/>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/divider"
+                        android:layout_marginVertical="16dp"/>
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:baselineAligned="false">
 
-                        <TextView
-                            android:id="@+id/txtTotalPriceLabel"
+                        <LinearLayout
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Total Price:"
-                            android:textColor="@color/textSecondary"
-                            android:textSize="12sp" />
-
-                        <TextView
-                            android:id="@+id/txtTotalPrice"
-                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/textPrimary"
-                            android:textStyle="bold"
-                            android:textSize="16sp" />
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/mrp_label"
+                                style="@style/DetailLabel"/>
+                            <TextView
+                                android:id="@+id/txtTotalPrice"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/currency_placeholder"
+                                style="@style/DetailValue"/>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/gst_rate_label"
+                                style="@style/DetailLabel"/>
+                            <TextView
+                                android:id="@+id/txtTotalRate"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/percentage_placeholder"
+                                style="@style/DetailValue"/>
+                        </LinearLayout>
                     </LinearLayout>
 
-                    <!-- Tax rate -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginTop="8dp">
-
+                        android:layout_marginTop="16dp"
+                        android:orientation="vertical">
                         <TextView
-                            android:id="@+id/txtTotalRateLabel"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Total Rate:"
-                            android:textColor="@color/textSecondary"
-                            android:textSize="12sp" />
-
-                        <TextView
-                            android:id="@+id/txtTotalRate"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/textPrimary"
-                            android:textStyle="bold"
-                            android:textSize="14sp" />
-                    </LinearLayout>
-
-                    <!-- Tax amount -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginTop="8dp">
-
-                        <TextView
-                            android:id="@+id/txtTaxAmountLabel"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Tax Amount:"
-                            android:textColor="@color/textSecondary"
-                            android:textSize="12sp" />
-
+                            android:text="@string/tax_amount_included_label"
+                            style="@style/DetailLabel"/>
                         <TextView
                             android:id="@+id/txtTaxAmount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/colorPrimary"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
+                            android:text="@string/currency_placeholder"
+                            android:textColor="@color/errorColor"
+                            android:textSize="18sp"
+                            android:textStyle="bold"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_rounded_accent"
+                        android:padding="16dp"
+                        android:layout_marginTop="20dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/actual_cost_label"
+                            android:textColor="@color/colorPrimaryDark"
+                            android:textSize="12sp"/>
+                        <TextView
+                            android:id="@+id/txtNetPrice"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/currency_placeholder"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/colorPrimary"/>
                     </LinearLayout>
                 </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="12dp"
-                    android:background="@color/divider" />
-
-                <!-- Net Price -->
-                <LinearLayout
-                    android:id="@+id/netPriceBox"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="8dp"
-                    android:layout_marginTop="12dp"
-                    android:background="@color/netPriceBg"
-                    android:backgroundTint="@color/netPriceBg">
-
-                    <TextView
-                        android:id="@+id/txtNetPriceLabel"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Net Price (Actual Cost):"
-                        android:textColor="@color/textSecondary"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:id="@+id/txtNetPrice"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textColor="@color/textPrimary"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- History Button -->
             <Button
                 android:id="@+id/btnHistory"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="16dp"
-                android:background="@color/colorAccent"
-                android:gravity="center"
-                android:text="📜 VIEW HISTORY"
-                style="@style/MyPrimaryButton"
-                android:textColor="#0D47A1" />
+                android:layout_height="56dp"
+                android:text="@string/view_history"
+                android:textColor="@color/colorPrimary"
+                android:backgroundTint="@color/surfaceColor"
+                android:stateListAnimator="@null"
+                app:strokeColor="@color/divider"
+                app:strokeWidth="1dp"
+                app:cornerRadius="12dp"/>
+
         </LinearLayout>
     </ScrollView>
+
+    <FrameLayout
+        android:id="@+id/fragmentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/backgroundColor"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

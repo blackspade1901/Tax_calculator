@@ -1,5 +1,18 @@
 <resources>
     <string name="app_name">Tax calculator</string>
+    <string name="app_title">Tax\nCalculator</string>
+    <string name="settings">Settings</string>
+    <string name="scan_product_code">Scan Product Code</string>
+    <string name="scanned_item">SCANNED ITEM</string>
+    <string name="product_name_placeholder">Product Name</string>
+    <string name="brand_name_placeholder">Brand Name</string>
+    <string name="mrp_label">MRP</string>
+    <string name="currency_placeholder">₹0.00</string>
+    <string name="gst_rate_label">GST Rate</string>
+    <string name="percentage_placeholder">0%</string>
+    <string name="tax_amount_included_label">Tax Amount Included</string>
+    <string name="actual_cost_label">Actual Cost (Net)</string>
+    <string name="view_history">View History</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

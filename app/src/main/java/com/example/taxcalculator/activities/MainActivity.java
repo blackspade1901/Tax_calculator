@@ -6,11 +6,13 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import androidx.appcompat.app.AppCompatActivity;
+import android.widget.Toast;
 import androidx.cardview.widget.CardView;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.taxcalculator.R;
+import com.example.taxcalculator.fragments.HistoryFragment;
+import com.example.taxcalculator.fragments.SettingsFragment;
 import com.example.taxcalculator.models.ProductItem;
 import com.example.taxcalculator.utils.ThemeHelper;
 
@@ -20,7 +22,7 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-    private LinearLayout cardProduct;
+    private CardView cardProduct;
     private TextView tvProductName, tvBrandName, tvTaxRate, tvTaxAmount,  tvTotalPrice, tvNetPrice;
     private Button btnScan, btnHistory;
     private ImageButton btnSettings;
@@ -64,11 +66,24 @@ public class MainActivity extends AppCompatActivity {
         btnScan.setOnClickListener(v -> simulateScan());
 
         btnHistory.setOnClickListener(v -> {
-            // history implementation
+            HistoryFragment fragment =
+                    HistoryFragment.newInstance(new ArrayList<>(history));
+
+            findViewById(R.id.fragmentContainer).setVisibility(View.VISIBLE);
+
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragmentContainer, fragment)
+                    .addToBackStack(null)
+                    .commit();
         });
 
+
+
         btnSettings.setOnClickListener(view -> {
-            // settings implementation
+            SettingsFragment fragment = new SettingsFragment();
+            fragment.show(getSupportFragmentManager(), "settingsBottomSheet");
+            Toast.makeText(this, "Settings clicked", Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -106,5 +121,15 @@ public class MainActivity extends AppCompatActivity {
 
     public List<ProductItem> getHistory(){
         return history;
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+            getSupportFragmentManager().popBackStack();
+            findViewById(R.id.fragmentContainer).setVisibility(View.GONE);
+        } else {
+            super.onBackPressed();
+        }
     }
 }
