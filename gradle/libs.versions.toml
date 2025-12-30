@@ -14,6 +14,11 @@ activity = "1.12.2"
 constraintlayout = "2.2.1"
 filamentAndroid = "1.17.1"
 room = "2.8.4"
+camerax = "1.5.2"
+mlkit = "17.3.0"
+retrofit = "2.1.0"
+retrofitGson = "2.11.0"
+gson = "2.13.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -34,9 +39,19 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+#noinspection Aligned16KB
 filament-android = { group = "com.google.ar.sceneform", name = "filament-android", version.ref = "filamentAndroid" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "camerax" }
+camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
+camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
+camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
+mlkit-barcode = {group = "com.google.mlkit", name = "barcode-scanning", version.ref = "mlkit"}
+retrofit = {group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit"}
+converter-gson = {group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofitGson"}
+gson = {group = "com.google.code.gson", name = "gson", version.ref = "gson"}
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
