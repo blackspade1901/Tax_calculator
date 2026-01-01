@@ -1,13 +1,42 @@
-This project is a simple mobile Tax Calculator app made for Indian users to quickly see how much GST they are paying on everyday products. The idea is that when someone “scans” a product (right now using preset examples, and later possibly with a real barcode), the app immediately shows a clear breakdown of the price into base amount and GST. The design uses a clean blue theme so it looks consistent and easy to read on modern Android phones.
+# 🇮🇳 Smart GST Tax Calculator & Scanner
 
-Inside the app, there is a basic data model called `ProductItem` that holds the product name, brand, total price, and GST rate. Using these values, the app calculates the GST amount and the net price (price without tax) using standard Indian GST percentage formulas. Because this calculation logic is kept separate from the screens, it is easy to later replace the dummy data with real data from a barcode or an online API without changing the whole app.
+A smart, crowdsourced barcode scanner that calculates GST tax slabs automatically. 
+Built with an **Offline-First** and **Parallel Network** architecture to ensure instant results.
 
-The flow for the user starts with a Welcome Screen. This screen explains what the app does and shows a barcode-style icon, the app name “Tax Calculator,” and a short tagline about understanding how much tax you pay. There is a single “Get Started” button that takes the user into the main part of the app. This keeps the first experience very simple and similar to many GST helper apps already used in India.
+## 🚀 Key Features
 
-After that, the user sees the Home Screen, which is where most of the work happens. At the top, there is a blue bar with the app name and a settings icon. Below that, a “SCAN BARCODE” button simulates scanning and cycles through example items like milk, noodles, and a smartphone with realistic GST rates such as 5% and 18%. When an item is selected, a card appears showing details: product name, brand, total price, GST rate, GST amount, and net price. Everything is laid out in rows with labels so users can immediately understand how much of the total is tax and how much is the base cost.
+* **⚡ Hybrid Parallel Scanning:** Simultaneously races 4 different sources to find product data:
+    1.  **Cloud Firestore** (Crowdsourced data - Fastest)
+    2.  **OpenFoodFacts API**
+    3.  **OpenBeautyFacts API**
+    4.  **UPCItemDB** (Backup)
+* **☁️ Crowdsourcing Engine:** Every manual entry by a user is uploaded to the cloud, making the scanner smarter for the next user.
+* **🏢 Dynamic Tax Slabs:** Configurable tax categories (Exempt, Essential, Standard, Luxury) that auto-calculate based on current Indian GST laws.
+* **💾 Offline Persistence:** Uses **Room Database** to cache history. Works perfectly without internet.
+* **📷 ML Kit Vision:** Instant barcode detection using Google's ML Kit and CameraX.
 
-Each time a product is scanned, it is added to a history list. From the Home Screen, a “VIEW HISTORY” button opens the History Screen, which shows a scrollable list of all scanned items. Each entry displays the product name, the price in rupees, and a small badge with the GST percentage. There is also a “Delete All History” button that clears this list when the user wants to start fresh or remove their data.
+## 🛠️ Tech Stack
 
-Finally, the app has a Settings panel that slides up from the bottom of the screen, similar to a bottom sheet. It darkens the background and shows a small card with a “Dark Mode” switch and a “Contact Support” section. The Dark Mode toggle currently just changes its own state, but the structure is ready to control the whole app theme later. The support section includes a clickable email address (`support@taxcalculator.com`). When tapped, the app uses the device’s email client to open a new message with the address and subject already filled in, which matches how many tax and finance apps handle support.
+* **Language:** Java
+* **Architecture:** Parallel Execution (Atomic Boolean Locks)
+* **Database:** * **Local:** Room Persistence Library (SQLite)
+    * **Cloud:** Firebase Firestore (NoSQL)
+* **Networking:** Retrofit 2 + Gson
+* **Hardware:** CameraX + ML Kit Vision API
+* **UI:** Material Design Components
 
-Overall, the app is a focused, beginner‑friendly project: it shows how to structure screens, keep calculation logic separate, maintain a simple in‑memory history, and provide basic settings and support options while staying tailored to India’s GST system.
+## 📸 How it Works (The "Race" Logic)
+
+1.  **Phase 1 (Cache):** Checks Cloud Firestore. If found, returns immediately ( < 100ms).
+2.  **Phase 2 (Race):** If not in cloud, fires requests to Food, Beauty, and Product APIs **simultaneously**.
+3.  **Phase 3 (Win):** The first API to return valid data "Wins" the race and cancels the others to save resources.
+4.  **Phase 4 (Learn):** If all fail, the user enters data manually, which is instantly uploaded to the Cloud for future users.
+
+## 📝 Setup
+
+1.  Clone the repo.
+2.  Add your `google-services.json` file (Firebase) to the `/app` folder.
+3.  Build and Run!
+
+---
+*Built as a Master of Computer Applications (MCA) project at Goa University.*
