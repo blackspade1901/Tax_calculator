@@ -32,7 +32,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         ProductItem p = list.get(position);
         holder.name.setText(p.getName());
-        holder.price.setText("₹"+ p.getNetPrice());
+        holder.price.setText(String.format(java.util.Locale.getDefault(), "₹ %.2f", p.getNetPrice()));
     }
 
     @Override

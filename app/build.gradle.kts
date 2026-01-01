@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -66,6 +67,10 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.gson)
+    implementation("com.google.guava:guava:31.1-android")
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.google.firebase.firestore)
 
 
     testImplementation(libs.junit)

@@ -16,12 +16,15 @@ filamentAndroid = "1.17.1"
 room = "2.8.4"
 camerax = "1.5.2"
 mlkit = "17.3.0"
-retrofit = "2.1.0"
+retrofit = "2.11.0"
 retrofitGson = "2.11.0"
 gson = "2.13.2"
+googleServices = "4.4.2"
+firestore = "33.1.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+google-firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -51,10 +54,12 @@ mlkit-barcode = {group = "com.google.mlkit", name = "barcode-scanning", version.
 retrofit = {group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit"}
 converter-gson = {group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofitGson"}
 gson = {group = "com.google.code.gson", name = "gson", version.ref = "gson"}
+firebase-firestore = {group = "com.google.firebase", name = "firestore", version.ref = "firestore"}
+firebase-bom = {group = "com.google.firebase", name = "firebase-bom", version.ref = "firestore"}
 
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-
+google-services = {id = "com.google.gms.google-services", version.ref = "googleServices"}

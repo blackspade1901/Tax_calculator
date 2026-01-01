@@ -43,6 +43,7 @@ public class ScanFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_scan, container, false);
     }
 
+    @OptIn(markerClass = ExperimentalGetImage.class)
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -135,6 +136,7 @@ public class ScanFragment extends Fragment {
         requireActivity().findViewById(R.id.fragmentContainer).setVisibility(View.GONE);
     }
 
+    @OptIn(markerClass = ExperimentalGetImage.class)
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == 101 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {

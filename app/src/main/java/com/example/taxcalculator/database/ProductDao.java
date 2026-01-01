@@ -8,12 +8,19 @@ import java.util.List;
 
 @Dao
 public interface ProductDao {
+
     @Insert
     void insert(ProductItem product);
 
-    @Query("SELECT * FROM products ORDER BY id DESC")
+    // FIX: Changed 'products' to 'product_table'
+    @Query("SELECT * FROM product_table ORDER BY id DESC")
     List<ProductItem> getAll();
 
-    @Query("DELETE FROM products")
+    // FIX: Changed 'products' to 'product_table'
+    @Query("DELETE FROM product_table")
     void deleteAll();
+
+    // This is the new method for the Offline Scanner
+    @Query("SELECT * FROM product_table WHERE barcode = :code LIMIT 1")
+    ProductItem findByBarcode(String code);
 }

@@ -1,46 +1,41 @@
 package com.example.taxcalculator.models;
 
-import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
-@Entity(tableName = "products")
-public class ProductItem implements  java.io.Serializable{
+import java.io.Serializable;
+
+@Entity(tableName = "product_table")
+public class ProductItem implements Serializable {
     @PrimaryKey(autoGenerate = true)
-    private int id;
+    public int id;
 
-    @ColumnInfo(name = "name")
     private String name;
-
-    @ColumnInfo(name = "brand")
     private String brand;
+    private double price; // This is the MRP
+    private double taxRate; // 0, 5, 12, 18, 40
 
-    @ColumnInfo(name = "total_price")
-    private double totalPrice;
+    // NEW FIELD: Store the barcode!
+    private String barcode;
 
-    @ColumnInfo(name = "tax_rate")
-    private double taxRate;
-
-    public ProductItem(String name, String brand, double totalPrice, double taxRate) {
+    // Updated Constructor
+    public ProductItem(String name, String brand, double price, double taxRate, String barcode) {
         this.name = name;
         this.brand = brand;
-        this.totalPrice = totalPrice;
+        this.price = price;
         this.taxRate = taxRate;
+        this.barcode = barcode;
     }
 
-    public int getId(){ return id; }
-    public void setId(int id){ this.id = id; }
-
+    // Getters and Setters
     public String getName() { return name; }
     public String getBrand() { return brand; }
-    public double getTotalPrice() { return totalPrice; }
+    public double getPrice() { return price; }
     public double getTaxRate() { return taxRate; }
+    public String getBarcode() { return barcode; }
 
-    public double getTaxAmount() {
-        return (totalPrice * taxRate) / 100.0;
-    }
-
-    public double getNetPrice() {
-        return totalPrice - getTaxAmount();
-    }
+    // Helpers for calculations
+    public double getTaxAmount() { return (price * taxRate) / (100 + taxRate); }
+    public double getNetPrice() { return price - getTaxAmount(); }
+    public double getTotalPrice() { return price; }
 }

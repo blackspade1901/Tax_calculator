@@ -6,22 +6,28 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.activity.OnBackPressedCallback;
 import androidx.cardview.widget.CardView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.taxcalculator.R;
 import com.example.taxcalculator.api.ProductResponse;
 import com.example.taxcalculator.api.RetrofitClient;
+import com.example.taxcalculator.api.UpcItemResponse;
 import com.example.taxcalculator.database.AppDatabase;
 import com.example.taxcalculator.fragments.HistoryFragment;
 import com.example.taxcalculator.fragments.SettingsFragment;
 import com.example.taxcalculator.fragments.ScanFragment;
 import com.example.taxcalculator.models.ProductItem;
+import com.example.taxcalculator.utils.BarcodeRouter;
+import com.example.taxcalculator.utils.FirestoreHelper;
 import com.example.taxcalculator.utils.ThemeHelper;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -37,27 +43,28 @@ public class MainActivity extends AppCompatActivity {
     private ProductItem selectedProduct;
     private AppDatabase db;
 
+    // --- CONCURRENCY CONTROLS ---
+    private final AtomicBoolean isSearchActive = new AtomicBoolean(false);
+    private final AtomicInteger failureCount = new AtomicInteger(0);
+    private final List<Call<ProductResponse>> activeCalls = new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applyTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize Database
         db = AppDatabase.getInstance(this);
 
-        // Handle the Back Button the modern way (Android 13+)
-        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                // If a fragment is open (Scan or History), close it
                 if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
                     getSupportFragmentManager().popBackStack();
                     findViewById(R.id.fragmentContainer).setVisibility(View.GONE);
                 } else {
-                    // If no fragment is open, close the app normally
-                    setEnabled(false); // Disable this custom callback
-                    getOnBackPressedDispatcher().onBackPressed(); // Call default behavior
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
                 }
             }
         });
@@ -81,7 +88,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
-        // SCAN BUTTON: Opens the Camera Fragment
         btnScan.setOnClickListener(v -> {
             ScanFragment fragment = new ScanFragment();
             findViewById(R.id.fragmentContainer).setVisibility(View.VISIBLE);
@@ -92,16 +98,12 @@ public class MainActivity extends AppCompatActivity {
                     .commit();
         });
 
-        // HISTORY BUTTON: Fetches from DB in Background
         btnHistory.setOnClickListener(v -> {
             new Thread(() -> {
                 List<ProductItem> savedList = db.productDao().getAll();
-
-                // Switch back to Main Thread to update UI
                 runOnUiThread(() -> {
                     ArrayList<ProductItem> historyList = new ArrayList<>(savedList);
                     HistoryFragment fragment = HistoryFragment.newInstance(historyList);
-
                     findViewById(R.id.fragmentContainer).setVisibility(View.VISIBLE);
                     getSupportFragmentManager()
                             .beginTransaction()
@@ -112,7 +114,6 @@ public class MainActivity extends AppCompatActivity {
             }).start();
         });
 
-        // SETTINGS BUTTON
         btnSettings.setOnClickListener(view -> {
             SettingsFragment fragment = new SettingsFragment();
             fragment.show(getSupportFragmentManager(), "settingsBottomSheet");
@@ -134,7 +135,6 @@ public class MainActivity extends AppCompatActivity {
         tvNetPrice.setText(String.format(Locale.getDefault(), "₹ %.2f", selectedProduct.getNetPrice()));
     }
 
-    // Called by HistoryFragment to clear DB
     public void clearHistory() {
         new Thread(() -> {
             db.productDao().deleteAll();
@@ -146,106 +146,179 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    // --- REAL API LOGIC ---
+    // =================================================================================
+    //  HYBRID PARALLEL SCANNER ENGINE
+    // =================================================================================
 
-    // 1. Called by ScanFragment when a barcode is detected
-    // 6. WATERFALL SCANNER: Food -> Beauty -> Product -> Manual
     public void onProductScanned(String barcodeValue) {
-        Toast.makeText(this, "Searching Food Database...", Toast.LENGTH_SHORT).show();
+        if (isSearchActive.getAndSet(true)) return; // Lock
 
-        // 1. Try FOOD Database
-        searchDatabase(barcodeValue, "food", (foundFood, nameFood, brandFood) -> {
-            if (foundFood) {
-                showPriceDialog(nameFood, brandFood);
-                return;
+        // Reset State
+        failureCount.set(0);
+        activeCalls.clear();
+
+        runOnUiThread(() -> Toast.makeText(this, "Checking Cloud Database...", Toast.LENGTH_SHORT).show());
+
+        // PHASE 1: CHECK FIREBASE FIRST
+        FirestoreHelper.checkProduct(barcodeValue, new FirestoreHelper.FirestoreCallback() {
+            @Override
+            public void onSuccess(ProductItem item) {
+                // SUCCESS: Found fully populated item (Price + Tax included)
+                runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.this, "Found in Cloud!", Toast.LENGTH_SHORT).show();
+                    // Open dialog PRE-FILLED with Price
+                    showPriceDialog(item.getName(), item.getBrand(), barcodeValue, item.getPrice(), item.getTaxRate());
+                    isSearchActive.set(false); // Unlock
+                });
             }
 
-            // 2. Try BEAUTY Database (Soap, Shampoo)
-            runOnUiThread(() -> Toast.makeText(this, "Checking Beauty Database...", Toast.LENGTH_SHORT).show());
-            searchDatabase(barcodeValue, "beauty", (foundBeauty, nameBeauty, brandBeauty) -> {
-                if (foundBeauty) {
-                    showPriceDialog(nameBeauty, brandBeauty);
-                    return;
-                }
-
-                // 3. Try PRODUCTS Database (Tech, Toys)
-                runOnUiThread(() -> Toast.makeText(this, "Checking Product Database...", Toast.LENGTH_SHORT).show());
-                searchDatabase(barcodeValue, "product", (foundProduct, nameProduct, brandProduct) -> {
-                    if (foundProduct) {
-                        showPriceDialog(nameProduct, brandProduct);
-                    } else {
-                        // 4. Not found anywhere? Open Manual Entry
-                        runOnUiThread(() -> {
-                            Toast.makeText(MainActivity.this, "New item! Please enter details.", Toast.LENGTH_SHORT).show();
-                            showPriceDialog("", ""); // Empty fields
-                        });
-                    }
-                });
-            });
+            @Override
+            public void onFailure() {
+                // FAIL: Not in cloud -> Start Phase 2
+                runOnUiThread(() -> startOpenApiRace(barcodeValue));
+            }
         });
     }
 
-    // Helper Interface for callbacks
-    interface OnSearchFinished {
-        void onResult(boolean found, String name, String brand);
+    // PHASE 2: OPEN API RACE
+    private void startOpenApiRace(String barcode) {
+        Toast.makeText(this, "Scanning Global APIs...", Toast.LENGTH_SHORT).show();
+
+        // Optimization: Check for Books
+        if (BarcodeRouter.getRoute(barcode) == BarcodeRouter.ProductType.BOOK) {
+            Toast.makeText(this, "Book detected!", Toast.LENGTH_SHORT).show();
+            // Books rarely have MRP in APIs, so we treat as manual entry for now or add Book API later
+            triggerManualEntry(barcode);
+            return;
+        }
+
+        // Fire 3 Requests in Parallel
+        checkDatabase(barcode, "food");
+        checkDatabase(barcode, "beauty");
+        checkDatabase(barcode, "product");
     }
 
-    // Generic Search Helper
-    private void searchDatabase(String barcode, String type, OnSearchFinished listener) {
-        RetrofitClient.getApi(type).getProduct(barcode).enqueue(new Callback<ProductResponse>() {
+    private void checkDatabase(String barcode, String type) {
+        Call<ProductResponse> call = RetrofitClient.getApi(type).getProduct(barcode);
+        activeCalls.add(call);
+
+        call.enqueue(new Callback<ProductResponse>() {
             @Override
             public void onResponse(Call<ProductResponse> call, Response<ProductResponse> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().status == 1) {
-                    String name = response.body().product.getBestName();
-                    String brand = response.body().product.brands;
-                    // Fix nulls
-                    if (name == null) name = "";
-                    if (brand == null) brand = "";
+                if (!isSearchActive.get()) return; // Race already won
 
-                    listener.onResult(true, name, brand);
+                if (response.isSuccessful() && response.body() != null && response.body().status == 1) {
+                    // WINNER FOUND
+                    if (declareWinner()) {
+                        String name = response.body().product.getBestName();
+                        String brand = response.body().product.brands;
+                        // Open dialog with Name/Brand (Price is 0.0 so user enters it)
+                        showPriceDialog(name, brand, barcode, 0.0, 0.0);
+                    }
                 } else {
-                    listener.onResult(false, null, null);
+                    handleOpenApiFailure(barcode);
                 }
             }
+
             @Override
             public void onFailure(Call<ProductResponse> call, Throwable t) {
-                listener.onResult(false, null, null);
+                if (!call.isCanceled()) {
+                    handleOpenApiFailure(barcode);
+                }
             }
         });
     }
 
-    // Universal Dialog: Handles both API results and Manual Entry
-    private void showPriceDialog(String preFilledName, String preFilledBrand) {
+    private void handleOpenApiFailure(String barcode) {
+        if (!isSearchActive.get()) return;
+
+        // If all 3 Open APIs fail...
+        if (failureCount.incrementAndGet() == 3) {
+            // PHASE 3: CHECK BACKUP (UPCitemdb)
+            runOnUiThread(() -> Toast.makeText(this, "Checking Backup Database...", Toast.LENGTH_SHORT).show());
+            checkBackupDatabase(barcode);
+        }
+    }
+
+    // PHASE 3: BACKUP API
+    private void checkBackupDatabase(String barcode) {
+        RetrofitClient.getUpcApi().getProduct(barcode).enqueue(new Callback<UpcItemResponse>() {
+            @Override
+            public void onResponse(Call<UpcItemResponse> call, Response<UpcItemResponse> response) {
+                if (!isSearchActive.get()) return;
+
+                if (response.isSuccessful() && response.body() != null && response.body().total > 0) {
+                    isSearchActive.set(false);
+                    UpcItemResponse.UpcItem item = response.body().items.get(0);
+                    // Open dialog with Name/Brand (Price 0.0)
+                    showPriceDialog(item.title, item.brand, barcode, 0.0, 0.0);
+                } else {
+                    // PHASE 4: MANUAL ENTRY
+                    triggerManualEntry(barcode);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<UpcItemResponse> call, Throwable t) {
+                triggerManualEntry(barcode);
+            }
+        });
+    }
+
+    // PHASE 4: MANUAL ENTRY
+    private void triggerManualEntry(String barcode) {
+        if (isSearchActive.getAndSet(false)) {
+            runOnUiThread(() -> {
+                Toast.makeText(MainActivity.this, "Not found. Please add details.", Toast.LENGTH_SHORT).show();
+                // Open empty dialog
+                showPriceDialog("", "", barcode, 0.0, 0.0);
+            });
+        }
+    }
+
+    private boolean declareWinner() {
+        boolean won = isSearchActive.getAndSet(false);
+        if (won) {
+            for (Call<ProductResponse> call : activeCalls) {
+                if (!call.isExecuted() && !call.isCanceled()) call.cancel();
+            }
+            activeCalls.clear();
+        }
+        return won;
+    }
+
+    // =================================================================================
+    //  SMART DIALOG (Handles Full, Partial, and Empty Data)
+    // =================================================================================
+
+    private void showPriceDialog(String preFilledName, String preFilledBrand, String currentBarcode, double preFilledPrice, double preFilledTax) {
+        // 1. Inflate the Custom Layout
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-        builder.setTitle("Add Product Details");
+        android.view.View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_product, null);
+        builder.setView(dialogView);
 
-        // Layout Container
-        android.widget.LinearLayout layout = new android.widget.LinearLayout(this);
-        layout.setOrientation(android.widget.LinearLayout.VERTICAL);
-        layout.setPadding(50, 40, 50, 10);
+        // 2. Create the Dialog BEFORE setting listeners (so we can dismiss it later)
+        android.app.AlertDialog dialog = builder.create();
 
-        // 1. Name Input (Editable)
-        final android.widget.EditText inputName = new android.widget.EditText(this);
-        inputName.setHint("Product Name");
-        inputName.setText(preFilledName.equals("Unknown Product") ? "" : preFilledName); // Leave empty if unknown
-        layout.addView(inputName);
+        // Make background transparent so our rounded CardView shows properly
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        }
 
-        // 2. Brand Input (Editable)
-        final android.widget.EditText inputBrand = new android.widget.EditText(this);
-        inputBrand.setHint("Brand");
-        inputBrand.setText(preFilledBrand.equals("Unknown Brand") ? "" : preFilledBrand);
-        layout.addView(inputBrand);
+        // 3. Bind Views
+        android.widget.EditText inputName = dialogView.findViewById(R.id.inputName);
+        android.widget.EditText inputBrand = dialogView.findViewById(R.id.inputBrand);
+        android.widget.EditText inputPrice = dialogView.findViewById(R.id.inputPrice);
+        android.widget.Spinner taxSpinner = dialogView.findViewById(R.id.taxSpinner);
+        android.widget.Button btnSave = dialogView.findViewById(R.id.btnSave);
+        android.widget.Button btnCancel = dialogView.findViewById(R.id.btnCancel);
 
-        // 3. Price Input
-        final android.widget.EditText inputPrice = new android.widget.EditText(this);
-        inputPrice.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
-        inputPrice.setHint("MRP (₹)");
-        layout.addView(inputPrice);
+        // 4. Pre-fill Data
+        if (preFilledName != null && !preFilledName.isEmpty()) inputName.setText(preFilledName);
+        if (preFilledBrand != null && !preFilledBrand.isEmpty()) inputBrand.setText(preFilledBrand);
+        if (preFilledPrice > 0) inputPrice.setText(String.valueOf(preFilledPrice));
 
-        // 4. Tax Category Spinner
-        final android.widget.Spinner taxSpinner = new android.widget.Spinner(this);
-
-        // GST 2.0 Categories
+        // 5. Setup Spinner (Tax Rates)
         String[] categories = {
                 "Exempt (0%) - Milk, Bread",
                 "Essentials (5%) - Soap, Toothpaste",
@@ -253,24 +326,31 @@ public class MainActivity extends AppCompatActivity {
                 "Sin/Luxury (40%) - Soda, Tobacco"
         };
         final double[] rates = {0.0, 5.0, 18.0, 40.0};
-
         android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, categories);
         taxSpinner.setAdapter(adapter);
 
-        // Smart Auto-Select Logic
-        String currentName = inputName.getText().toString().toLowerCase();
-        if (currentName.contains("sprite") || currentName.contains("coke") || currentName.contains("pepsi")) {
-            taxSpinner.setSelection(3); // 40%
-        } else if (currentName.contains("milk") || currentName.contains("curd")) {
-            taxSpinner.setSelection(0); // 0%
+        // Auto-select Tax Logic
+        if (preFilledTax > 0) {
+            if (preFilledTax == 5.0) taxSpinner.setSelection(1);
+            else if (preFilledTax == 18.0) taxSpinner.setSelection(2);
+            else if (preFilledTax == 40.0) taxSpinner.setSelection(3);
+            else taxSpinner.setSelection(0);
         } else {
-            taxSpinner.setSelection(1); // Default to 5%
+            // Smart Guess based on Name
+            String currentName = (preFilledName != null ? preFilledName : "").toLowerCase();
+            if (currentName.contains("sprite") || currentName.contains("coke") || currentName.contains("tobacco")) {
+                taxSpinner.setSelection(3);
+            } else if (currentName.contains("milk") || currentName.contains("curd")) {
+                taxSpinner.setSelection(0);
+            } else if (currentName.contains("soap") || currentName.contains("toothpaste")) {
+                taxSpinner.setSelection(1);
+            } else {
+                taxSpinner.setSelection(2); // Default to Standard (18%)
+            }
         }
 
-        layout.addView(taxSpinner);
-        builder.setView(layout);
-
-        builder.setPositiveButton("Save", (dialog, which) -> {
+        // 6. Button Listeners
+        btnSave.setOnClickListener(v -> {
             String name = inputName.getText().toString();
             String brand = inputBrand.getText().toString();
             String priceStr = inputPrice.getText().toString();
@@ -283,19 +363,28 @@ public class MainActivity extends AppCompatActivity {
                 int selectedPos = taxSpinner.getSelectedItemPosition();
                 double selectedTax = rates[selectedPos];
 
-                ProductItem newItem = new ProductItem(name, brand, price, selectedTax);
+                ProductItem newItem = new ProductItem(name, brand, price, selectedTax, currentBarcode);
 
                 new Thread(() -> {
+                    // Save Local
                     db.productDao().insert(newItem);
+                    // Upload Cloud
+                    com.example.taxcalculator.utils.FirestoreHelper.uploadProduct(newItem);
+
                     runOnUiThread(() -> {
                         selectedProduct = newItem;
                         updateProductCard();
                         Toast.makeText(MainActivity.this, "Saved!", Toast.LENGTH_SHORT).show();
                     });
                 }).start();
+                dialog.dismiss(); // Close dialog
+            } else {
+                inputPrice.setError("Required");
             }
         });
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-        builder.show();
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
     }
 }

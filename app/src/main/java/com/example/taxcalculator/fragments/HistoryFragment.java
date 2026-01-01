@@ -1,8 +1,6 @@
 package com.example.taxcalculator.fragments;
 
-import static android.app.PendingIntent.getActivity;
-import static java.security.AccessController.getContext;
-
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,7 +17,6 @@ import com.example.taxcalculator.adapters.HistoryAdapter;
 import com.example.taxcalculator.models.ProductItem;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class HistoryFragment extends Fragment {
 
@@ -43,7 +40,9 @@ public class HistoryFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_history, container, false);
 
         if (getArguments() != null) {
-            history = (ArrayList<ProductItem>) getArguments().getSerializable(ARG_HISTORY);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                history = (ArrayList<ProductItem>) getArguments().getSerializable(ARG_HISTORY, ArrayList.class);
+            }
         }
 
         RecyclerView recyclerView = view.findViewById(R.id.recyclerHistory);
