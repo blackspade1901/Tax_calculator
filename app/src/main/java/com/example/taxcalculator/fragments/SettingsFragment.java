@@ -22,11 +22,21 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
+/**
+ * BottomSheetDialogFragment responsible for application settings.
+ * Allows the user to toggle dark mode and contact support via email.
+ */
 public class SettingsFragment extends BottomSheetDialogFragment {
 
     private SwitchMaterial switchDarkMode;
 
-    // --- FIX STARTS HERE: Force Transparent Background ---
+    /**
+     * Creates the dialog and sets up the layout to be transparent.
+     * This ensures the custom rounded corners of the bottom sheet background are visible.
+     *
+     * @param savedInstanceState The saved instance state.
+     * @return The Dialog instance.
+     */
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
@@ -44,30 +54,47 @@ public class SettingsFragment extends BottomSheetDialogFragment {
         });
         return dialog;
     }
-    // --- FIX ENDS HERE ---
 
+    /**
+     * Inflates the layout for the settings fragment.
+     *
+     * @param inflater           The LayoutInflater object.
+     * @param container          The parent view.
+     * @param savedInstanceState The saved state.
+     * @return The View for the fragment's UI.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_settings, container, false);
     }
 
+    /**
+     * Called after the view is created.
+     * Initializes the dark mode switch and support email functionality.
+     *
+     * @param view               The View returned by onCreateView.
+     * @param savedInstanceState The saved state.
+     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         switchDarkMode = view.findViewById(R.id.switchDarkMode);
 
-        // 1. Load Saved State
+        // 1. Load Saved State for Dark Mode
         SharedPreferences prefs = requireContext().getSharedPreferences(ThemeHelper.PREF_NAME, Context.MODE_PRIVATE);
         boolean isDark = prefs.getBoolean(ThemeHelper.KEY_DARk, false);
         switchDarkMode.setChecked(isDark);
 
-        // 2. Handle Toggle
+        // 2. Handle Dark Mode Toggle
         switchDarkMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
             ThemeHelper.toggleTheme(requireContext(), isChecked);
             ThemeHelper.applyTheme(requireContext());
-            requireActivity().recreate();
+            // Recreate activity to apply the new theme
+            if (getActivity() != null) {
+                getActivity().recreate();
+            }
             dismiss();
         });
 
@@ -90,6 +117,10 @@ public class SettingsFragment extends BottomSheetDialogFragment {
         });
     }
 
+    /**
+     * Called when the fragment is visible to the user.
+     * Sets the dim amount for the window background.
+     */
     @Override
     public void onStart() {
         super.onStart();

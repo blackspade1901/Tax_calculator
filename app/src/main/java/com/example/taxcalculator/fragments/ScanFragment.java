@@ -8,6 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
@@ -31,18 +33,65 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Fragment responsible for the barcode scanning functionality.
+ * Uses CameraX for the camera preview and ML Kit for barcode detection.
+ */
+@ExperimentalGetImage
 public class ScanFragment extends Fragment {
 
+    /**
+     * View for displaying the camera preview.
+     */
     private PreviewView viewFinder;
-    private ExecutorService cameraExecutor;
-    private boolean isScanning = true; // Prevents double-scanning
 
+    /**
+     * Executor for running camera analysis tasks on a background thread.
+     */
+    private ExecutorService cameraExecutor;
+
+    /**
+     * Flag to prevent multiple scans from being processed simultaneously.
+     */
+    private boolean isScanning = true;
+
+    /**
+     * Launcher for requesting camera permission using the modern Activity Result API.
+     * Replaces the deprecated onRequestPermissionsResult method.
+     */
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    startCamera();
+                } else {
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "Camera permission required", Toast.LENGTH_SHORT).show();
+                    }
+                    closeFragment();
+                }
+            });
+
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     *
+     * @param inflater           The LayoutInflater object.
+     * @param container          The parent view.
+     * @param savedInstanceState The saved state.
+     * @return The View for the fragment's UI.
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_scan, container, false);
     }
 
+    /**
+     * Called after the view has been created.
+     * Initializes the view finder and checks for camera permissions.
+     *
+     * @param view               The View returned by onCreateView.
+     * @param savedInstanceState The saved state.
+     */
     @OptIn(markerClass = ExperimentalGetImage.class)
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -51,18 +100,22 @@ public class ScanFragment extends Fragment {
 
         view.findViewById(R.id.btnClose).setOnClickListener(v -> closeFragment());
 
-        // Check Permission
+        // Check and Request Camera Permission
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
             startCamera();
         } else {
-            // Request Permission
-            requestPermissions(new String[]{Manifest.permission.CAMERA}, 101);
+            // Use the new Activity Result API to request permission
+            requestPermissionLauncher.launch(Manifest.permission.CAMERA);
         }
 
         cameraExecutor = Executors.newSingleThreadExecutor();
     }
 
+    /**
+     * Initializes and binds the CameraX use cases (Preview and ImageAnalysis).
+     * Sets up the ML Kit barcode scanner analyzer.
+     */
     @androidx.camera.core.ExperimentalGetImage
     @OptIn(markerClass = ExperimentalGetImage.class)
     private void startCamera() {
@@ -117,39 +170,46 @@ public class ScanFragment extends Fragment {
         }, ContextCompat.getMainExecutor(requireContext()));
     }
 
+    /**
+     * Processes the scanned barcode result.
+     * Delegates the result back to the MainActivity controller.
+     *
+     * @param code The scanned barcode string.
+     */
     private void handleScanResult(String code) {
         // Go back to Main Thread to update UI
-        requireActivity().runOnUiThread(() -> {
-            Toast.makeText(getContext(), "Scanned: " + code, Toast.LENGTH_SHORT).show();
-
-            // Pass data back to MainActivity
-            if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).onProductScanned(code);
-            }
-            closeFragment();
-        });
-    }
-
-    private void closeFragment(){
-        getParentFragmentManager().popBackStack();
-        // Hide the container again
-        requireActivity().findViewById(R.id.fragmentContainer).setVisibility(View.GONE);
-    }
-
-    @OptIn(markerClass = ExperimentalGetImage.class)
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == 101 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            startCamera();
-        } else {
-            Toast.makeText(getContext(), "Camera permission required", Toast.LENGTH_SHORT).show();
-            closeFragment();
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> {
+                // Pass data back to MainActivity via method call (Controller pattern)
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).onProductScanned(code);
+                }
+                closeFragment();
+            });
         }
     }
 
+    /**
+     * Closes the scanning fragment and returns to the previous screen.
+     */
+    private void closeFragment(){
+        if (getParentFragmentManager().getBackStackEntryCount() > 0) {
+            getParentFragmentManager().popBackStack();
+        }
+        if (getActivity() != null) {
+            getActivity().findViewById(R.id.fragmentContainer).setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * Cleans up resources when the view is destroyed.
+     * Shuts down the background camera executor.
+     */
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        cameraExecutor.shutdown();
+        if (cameraExecutor != null) {
+            cameraExecutor.shutdown();
+        }
     }
 }

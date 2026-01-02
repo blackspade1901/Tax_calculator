@@ -1,13 +1,68 @@
-This project is a simple mobile Tax Calculator app made for Indian users to quickly see how much GST they are paying on everyday products. The idea is that when someone “scans” a product (right now using preset examples, and later possibly with a real barcode), the app immediately shows a clear breakdown of the price into base amount and GST. The design uses a clean blue theme so it looks consistent and easy to read on modern Android phones.
+# TrueRate - Smart GST Calculator & Scanner
 
-Inside the app, there is a basic data model called `ProductItem` that holds the product name, brand, total price, and GST rate. Using these values, the app calculates the GST amount and the net price (price without tax) using standard Indian GST percentage formulas. Because this calculation logic is kept separate from the screens, it is easy to later replace the dummy data with real data from a barcode or an online API without changing the whole app.
+TrueRate is a robust Android application designed to simplify GST (Goods and Services Tax) calculations for everyday products. It features a smart, crowdsourced barcode scanner that automatically identifies products, retrieves their details, and calculates the precise tax breakdown based on Indian GST laws.
 
-The flow for the user starts with a Welcome Screen. This screen explains what the app does and shows a barcode-style icon, the app name “Tax Calculator,” and a short tagline about understanding how much tax you pay. There is a single “Get Started” button that takes the user into the main part of the app. This keeps the first experience very simple and similar to many GST helper apps already used in India.
+Built with performance in mind, the app utilizes an **Offline-First** approach and a **Parallel Network** architecture to ensure users get results instantly, regardless of network conditions.
 
-After that, the user sees the Home Screen, which is where most of the work happens. At the top, there is a blue bar with the app name and a settings icon. Below that, a “SCAN BARCODE” button simulates scanning and cycles through example items like milk, noodles, and a smartphone with realistic GST rates such as 5% and 18%. When an item is selected, a card appears showing details: product name, brand, total price, GST rate, GST amount, and net price. Everything is laid out in rows with labels so users can immediately understand how much of the total is tax and how much is the base cost.
+## 🚀 Key Features
 
-Each time a product is scanned, it is added to a history list. From the Home Screen, a “VIEW HISTORY” button opens the History Screen, which shows a scrollable list of all scanned items. Each entry displays the product name, the price in rupees, and a small badge with the GST percentage. There is also a “Delete All History” button that clears this list when the user wants to start fresh or remove their data.
+### ⚡ Hybrid Parallel Scanning
+The app employs a sophisticated "Race Logic" to retrieve product data with minimal latency. It simultaneously queries four different sources:
+1.  **Cloud Firestore:** Our proprietary crowdsourced database (Fastest).
+2.  **OpenFoodFacts API:** For food and beverage items.
+3.  **OpenBeautyFacts API:** For cosmetics and personal care.
+4.  **UPCItemDB:** A reliable backup for general retail items.
 
-Finally, the app has a Settings panel that slides up from the bottom of the screen, similar to a bottom sheet. It darkens the background and shows a small card with a “Dark Mode” switch and a “Contact Support” section. The Dark Mode toggle currently just changes its own state, but the structure is ready to control the whole app theme later. The support section includes a clickable email address (`support@taxcalculator.com`). When tapped, the app uses the device’s email client to open a new message with the address and subject already filled in, which matches how many tax and finance apps handle support.
+*The first source to return valid data "wins" the race, cancelling the other requests to conserve resources.*
 
-Overall, the app is a focused, beginner‑friendly project: it shows how to structure screens, keep calculation logic separate, maintain a simple in‑memory history, and provide basic settings and support options while staying tailored to India’s GST system.
+### ☁️ Crowdsourcing Engine
+TrueRate gets smarter with every use. If a product is not found in our databases, users can manually enter the details. This data is instantly uploaded to the cloud, making the product recognizable for all future users.
+
+### 🏢 Dynamic Tax Slabs
+The app supports configurable tax categories based on current GST standards:
+*   **Exempt (0%):** Essentials like milk, bread, and fresh vegetables.
+*   **Essential (5%):** Daily-use items like oil, tea, and medicines.
+*   **Standard (18%):** Electronics and home appliances.
+*   **Luxury (40%):** Sin goods like tobacco and aerated drinks.
+
+### 💾 Offline Persistence
+Powered by the **Room Persistence Library**, TrueRate caches your scan history locally. You can access your previous scans and calculations even without an active internet connection.
+
+### 📷 Advanced Scanning
+Integrated with **Google ML Kit** and **CameraX**, the app offers instant and accurate barcode detection directly from the device's camera.
+
+## 🛠️ Technical Architecture
+
+*   **Language:** Java
+*   **Architecture pattern:** MVC (Model-View-Controller) with Repository Pattern
+*   **Database:**
+    *   **Local:** Room Database (SQLite) for history and caching.
+    *   **Cloud:** Firebase Firestore (NoSQL) for crowdsourced data.
+*   **Networking:** Retrofit 2 with Gson for API communication.
+*   **Concurrency:** Parallel Execution using ExecutorService and Atomic Boolean Locks.
+*   **Hardware Integration:** CameraX + ML Kit Vision API.
+*   **UI/UX:** Material Design Components.
+
+## 📸 How It Works
+
+1.  **Scan:** Point the camera at any product barcode.
+2.  **Identify:** The app checks the Cloud Cache first. If missing, it initiates a parallel API race to find the product globally.
+3.  **Calculate:** Once identified, the app applies the correct GST slab.
+4.  **Contribute:** If the product is unknown, your manual entry contributes to the global database.
+
+## 📝 Setup Instructions
+
+1.  **Clone the Repository:**
+    ```bash
+    git clone https://github.com/your-username/TaxCalculator.git
+    ```
+2.  **Firebase Configuration:**
+    *   Create a project in the Firebase Console.
+    *   Download the `google-services.json` file.
+    *   Place it in the `/app` directory of the project.
+3.  **Build:** Open the project in Android Studio and sync Gradle.
+4.  **Run:** Deploy the app to a physical device or emulator.
+
+---
+
+*Built as a Master of Computer Applications (MCA) project at Goa University.*
