@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "941518347652",
+    "project_id": "tax-calculator-4cb33",
+    "storage_bucket": "tax-calculator-4cb33.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:941518347652:android:6d7c7180406bdefd7ad1d1",
+        "android_client_info": {
+          "package_name": "com.example.taxcalculator"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVnWO7ENHR-ISZjUV90HHjcd8IJeXVc_A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -13,6 +13,37 @@
     <string name="tax_amount_included_label">Tax Amount Included</string>
     <string name="actual_cost_label">Actual Cost (Net)</string>
     <string name="view_history">View History</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!-- History Strings -->
+    <string name="scan_history">Scan History</string>
+    <string name="clear_history">Clear History</string>
+
+    <!-- Scan Strings -->
+    <string name="align_code">Align code within frame</string>
+    <string name="close_scan">Close scan</string>
+
+    <!-- Welcome Activity -->
+    <string name="app_logo_description">App Logo</string>
+    <string name="true_rate">TrueRate</string>
+    <string name="welcome_subtitle">Understand exactly how much tax you pay on every product</string>
+    <string name="get_started">Get Started</string>
+
+    <!-- Settings Strings -->
+    <string name="settings_title">Settings</string>
+    <string name="app_appearance">App Appearance</string>
+    <string name="switch_dark_mode">Switch to Dark Mode</string>
+    <string name="contact_support">Contact Support</string>
+    <string name="support_email">support@taxcalc.com</string>
+    <string name="app_version">v1.0.0</string>
+
+    <!-- Add Product Dialog -->
+    <string name="add_product_details">Add Product Details</string>
+    <string name="hint_product_name">Product Name</string>
+    <string name="hint_brand">Brand</string>
+    <string name="hint_mrp">MRP (₹)</string>
+    <string name="tax_category">Tax Category</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+
 </resources>
