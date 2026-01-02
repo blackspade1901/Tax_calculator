@@ -66,7 +66,7 @@ This project adheres to strict engineering standards with a robust and comprehen
 
 1.  **Clone the Repository:**
     ```bash
-    git clone [https://github.com/your-username/TaxCalculator.git](https://github.com/your-username/TaxCalculator.git)
+    git clone [https://github.com/blackspade1901/Tax_calculator.git](https://github.com/blackspade1901/Tax_calculator.git)
     ```
 2.  **Firebase Configuration:**
     * Create a project in the Firebase Console.
