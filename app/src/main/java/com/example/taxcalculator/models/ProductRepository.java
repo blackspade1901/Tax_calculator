@@ -117,7 +117,7 @@ public class ProductRepository {
 
         failureCount.set(0);
         activeCalls.clear();
-        callback.onSearchStatus("Checking Cloud Database...");
+        callback.onSearchStatus("Identifying product...");
 
         // Phase 1: Cloud
         FirestoreHelper.checkProduct(barcodeValue, new FirestoreHelper.FirestoreCallback() {
@@ -141,7 +141,7 @@ public class ProductRepository {
      * @param callback Callback to report search progress and results.
      */
     private void startOpenApiRace(String barcode, ScanCallback callback) {
-        callback.onSearchStatus("Scanning Global APIs...");
+        callback.onSearchStatus("Searching global databases...");
 
         if (BarcodeRouter.getRoute(barcode) == BarcodeRouter.ProductType.BOOK) {
             callback.onBookDetected(barcode);
@@ -201,7 +201,7 @@ public class ProductRepository {
         if (!isSearchActive.get()) return;
 
         if (failureCount.incrementAndGet() == 3) {
-            callback.onSearchStatus("Checking Backup Database...");
+            callback.onSearchStatus("Performing deep lookup...");
             checkBackupDatabase(barcode, callback);
         }
     }
