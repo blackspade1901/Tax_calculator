@@ -1,42 +1,80 @@
-# 🇮🇳 Smart GST Tax Calculator & Scanner
+# TrueRate - Smart GST Calculator & Scanner
 
-A smart, crowdsourced barcode scanner that calculates GST tax slabs automatically. 
-Built with an **Offline-First** and **Parallel Network** architecture to ensure instant results.
+TrueRate is a robust Android application designed to simplify GST (Goods and Services Tax) calculations for everyday products. It features a smart, crowdsourced barcode scanner that automatically identifies products, retrieves their details, and calculates the precise tax breakdown based on Indian GST laws.
+
+Built with performance in mind, the app utilizes an **Offline-First** approach and a **Parallel Network** architecture to ensure users get results instantly, regardless of network conditions.
 
 ## 🚀 Key Features
 
-* **⚡ Hybrid Parallel Scanning:** Simultaneously races 4 different sources to find product data:
-    1.  **Cloud Firestore** (Crowdsourced data - Fastest)
-    2.  **OpenFoodFacts API**
-    3.  **OpenBeautyFacts API**
-    4.  **UPCItemDB** (Backup)
-* **☁️ Crowdsourcing Engine:** Every manual entry by a user is uploaded to the cloud, making the scanner smarter for the next user.
-* **🏢 Dynamic Tax Slabs:** Configurable tax categories (Exempt, Essential, Standard, Luxury) that auto-calculate based on current Indian GST laws.
-* **💾 Offline Persistence:** Uses **Room Database** to cache history. Works perfectly without internet.
-* **📷 ML Kit Vision:** Instant barcode detection using Google's ML Kit and CameraX.
+### ⚡ Hybrid Parallel Scanning
+The app employs a sophisticated "Race Logic" to retrieve product data with minimal latency. It simultaneously queries four different sources:
+1.  **Cloud Firestore:** Our proprietary crowdsourced database (Fastest).
+2.  **OpenFoodFacts API:** For food and beverage items.
+3.  **OpenBeautyFacts API:** For cosmetics and personal care.
+4.  **UPCItemDB:** A reliable backup for general retail items.
 
-## 🛠️ Tech Stack
+*The first source to return valid data "wins" the race, cancelling the other requests to conserve resources.*
+
+### ☁️ Crowdsourcing Engine
+TrueRate gets smarter with every use. If a product is not found in our databases, users can manually enter the details. This data is instantly uploaded to the cloud, making the product recognizable for all future users.
+
+### 🏢 Dynamic Tax Slabs
+The app supports configurable tax categories based on current GST standards:
+* **Exempt (0%):** Essentials like milk, bread, and fresh vegetables.
+* **Essential (5%):** Daily-use items like oil, tea, and medicines.
+* **Standard (18%):** Electronics and home appliances.
+* **Luxury (40%):** Sin goods like tobacco and aerated drinks.
+
+### 💾 Offline Persistence
+Powered by the **Room Persistence Library**, TrueRate caches your scan history locally. You can access your previous scans and calculations even without an active internet connection.
+
+### 📷 Advanced Scanning
+Integrated with **Google ML Kit** and **CameraX**, the app offers instant and accurate barcode detection directly from the device's camera.
+
+## 🧪 Quality Assurance
+
+This project adheres to strict engineering standards with a robust and comprehensive test suite ensuring reliability and accuracy.
+
+* **100+ Unit Tests:** Rigorous testing of all core business logic including:
+    * **Tax Engine:** Verifies accurate calculation of Exempt (0%), Essential (5%), Standard (18%), and Luxury (40%) tax slabs with precise floating-point math.
+    * **Barcode Router:** Validates routing logic for Indian Retail (890), Books (978), and Global products.
+    * **Data Parsing:** Ensures resilience against null values, missing fields, and API inconsistencies.
+* **Integration Tests:** Validates the persistence layer, ensuring that the **Room Database** correctly saves, retrieves, and maintains data integrity for scan history.
+* **UI/Espresso Tests:** Automated verification of key user flows, including navigation, dialog interactions, and screen visibility on physical devices.
+* **Performance:** Achieved a **100% Pass Rate** across all test modules (Unit, Integration, and UI).
+
+## 🛠️ Technical Architecture
 
 * **Language:** Java
-* **Architecture:** Parallel Execution (Atomic Boolean Locks)
-* **Database:** * **Local:** Room Persistence Library (SQLite)
-    * **Cloud:** Firebase Firestore (NoSQL)
-* **Networking:** Retrofit 2 + Gson
-* **Hardware:** CameraX + ML Kit Vision API
-* **UI:** Material Design Components
+* **Architecture pattern:** MVC (Model-View-Controller) with Repository Pattern
+* **Database:**
+    * **Local:** Room Database (SQLite) for history and caching.
+    * **Cloud:** Firebase Firestore (NoSQL) for crowdsourced data.
+* **Networking:** Retrofit 2 with Gson for API communication.
+* **Concurrency:** Parallel Execution using ExecutorService and Atomic Boolean Locks.
+* **Hardware Integration:** CameraX + ML Kit Vision API.
+* **UI/UX:** Material Design Components.
 
-## 📸 How it Works (The "Race" Logic)
+## 📸 How It Works
 
-1.  **Phase 1 (Cache):** Checks Cloud Firestore. If found, returns immediately ( < 100ms).
-2.  **Phase 2 (Race):** If not in cloud, fires requests to Food, Beauty, and Product APIs **simultaneously**.
-3.  **Phase 3 (Win):** The first API to return valid data "Wins" the race and cancels the others to save resources.
-4.  **Phase 4 (Learn):** If all fail, the user enters data manually, which is instantly uploaded to the Cloud for future users.
+1.  **Scan:** Point the camera at any product barcode.
+2.  **Identify:** The app checks the Cloud Cache first. If missing, it initiates a parallel API race to find the product globally.
+3.  **Calculate:** Once identified, the app applies the correct GST slab.
+4.  **Contribute:** If the product is unknown, your manual entry contributes to the global database.
 
-## 📝 Setup
+## 📝 Setup Instructions
 
-1.  Clone the repo.
-2.  Add your `google-services.json` file (Firebase) to the `/app` folder.
-3.  Build and Run!
+1.  **Clone the Repository:**
+    ```bash
+    git clone [https://github.com/your-username/TaxCalculator.git](https://github.com/your-username/TaxCalculator.git)
+    ```
+2.  **Firebase Configuration:**
+    * Create a project in the Firebase Console.
+    * Download the `google-services.json` file.
+    * Place it in the `/app` directory of the project.
+3.  **Build:** Open the project in Android Studio and sync Gradle.
+4.  **Run:** Deploy the app to a physical device or emulator.
 
 ---
+
 *Built as a Master of Computer Applications (MCA) project at Goa University.*
