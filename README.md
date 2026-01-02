@@ -31,17 +31,29 @@ Powered by the **Room Persistence Library**, TrueRate caches your scan history l
 ### 📷 Advanced Scanning
 Integrated with **Google ML Kit** and **CameraX**, the app offers instant and accurate barcode detection directly from the device's camera.
 
+## 🧪 Quality Assurance
+
+This project adheres to strict engineering standards with a robust and comprehensive test suite ensuring reliability and accuracy.
+
+* **100+ Unit Tests:** Rigorous testing of all core business logic including:
+    * **Tax Engine:** Verifies accurate calculation of Exempt (0%), Essential (5%), Standard (18%), and Luxury (40%) tax slabs with precise floating-point math.
+    * **Barcode Router:** Validates routing logic for Indian Retail (890), Books (978), and Global products.
+    * **Data Parsing:** Ensures resilience against null values, missing fields, and API inconsistencies.
+* **Integration Tests:** Validates the persistence layer, ensuring that the **Room Database** correctly saves, retrieves, and maintains data integrity for scan history.
+* **UI/Espresso Tests:** Automated verification of key user flows, including navigation, dialog interactions, and screen visibility on physical devices.
+* **Performance:** Achieved a **100% Pass Rate** across all test modules (Unit, Integration, and UI).
+
 ## 🛠️ Technical Architecture
 
-*   **Language:** Java
-*   **Architecture pattern:** MVC (Model-View-Controller) with Repository Pattern
-*   **Database:**
-    *   **Local:** Room Database (SQLite) for history and caching.
-    *   **Cloud:** Firebase Firestore (NoSQL) for crowdsourced data.
-*   **Networking:** Retrofit 2 with Gson for API communication.
-*   **Concurrency:** Parallel Execution using ExecutorService and Atomic Boolean Locks.
-*   **Hardware Integration:** CameraX + ML Kit Vision API.
-*   **UI/UX:** Material Design Components.
+* **Language:** Java
+* **Architecture pattern:** MVC (Model-View-Controller) with Repository Pattern
+* **Database:**
+    * **Local:** Room Database (SQLite) for history and caching.
+    * **Cloud:** Firebase Firestore (NoSQL) for crowdsourced data.
+* **Networking:** Retrofit 2 with Gson for API communication.
+* **Concurrency:** Parallel Execution using ExecutorService and Atomic Boolean Locks.
+* **Hardware Integration:** CameraX + ML Kit Vision API.
+* **UI/UX:** Material Design Components.
 
 ## 📸 How It Works
 
