@@ -81,6 +81,7 @@
                     android:orientation="vertical"
                     android:padding="24dp">
 
+                    <!-- Product label -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -90,6 +91,7 @@
                         android:textColor="@color/textSecondary"
                         android:textStyle="bold"/>
 
+                    <!-- Product name -->
                     <TextView
                         android:id="@+id/txtName"
                         android:layout_width="match_parent"
@@ -100,6 +102,7 @@
                         android:textColor="@color/textPrimary"
                         android:layout_marginTop="4dp"/>
 
+                    <!-- Brand name -->
                     <TextView
                         android:id="@+id/txtBrand"
                         android:layout_width="wrap_content"
@@ -108,12 +111,14 @@
                         android:textSize="14sp"
                         android:textColor="@color/colorPrimary"/>
 
+                    <!-- Divider -->
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:background="@color/divider"
                         android:layout_marginVertical="16dp"/>
 
+                    <!-- MRP + GST Rate row -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -157,26 +162,104 @@
                         </LinearLayout>
                     </LinearLayout>
 
+                    <!-- ─── CGST / SGST Breakdown ────────────────────────────── -->
+                    <!-- Divider -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/divider"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="12dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tax Breakdown"
+                        android:textSize="12sp"
+                        android:letterSpacing="0.1"
+                        android:textColor="@color/textSecondary"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="10dp"/>
+
+                    <!-- CGST row -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="6dp">
+
                         <TextView
+                            android:id="@+id/txtCGSTLabel"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="CGST (9%)"
+                            android:textSize="14sp"
+                            android:textColor="@color/textSecondary"/>
+
+                        <TextView
+                            android:id="@+id/txtCGSTAmount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/tax_amount_included_label"
-                            style="@style/DetailLabel"/>
+                            android:text="₹ 0.00"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/textPrimary"/>
+                    </LinearLayout>
+
+                    <!-- SGST row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="6dp">
+
+                        <TextView
+                            android:id="@+id/txtSGSTLabel"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="SGST (9%)"
+                            android:textSize="14sp"
+                            android:textColor="@color/textSecondary"/>
+
+                        <TextView
+                            android:id="@+id/txtSGSTAmount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="₹ 0.00"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/textPrimary"/>
+                    </LinearLayout>
+
+                    <!-- Total Tax row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="4dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="Total Tax"
+                            android:textSize="14sp"
+                            android:textColor="@color/textSecondary"/>
+
                         <TextView
                             android:id="@+id/txtTaxAmount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/currency_placeholder"
+                            android:text="₹ 0.00"
                             android:textColor="@color/errorColor"
-                            android:textSize="18sp"
+                            android:textSize="14sp"
                             android:textStyle="bold"/>
                     </LinearLayout>
+                    <!-- ─── End Tax Breakdown ────────────────────────────────── -->
 
+                    <!-- Actual Cost (Net Price) highlight box -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -200,6 +283,7 @@
                             android:textStyle="bold"
                             android:textColor="@color/colorPrimary"/>
                     </LinearLayout>
+
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 

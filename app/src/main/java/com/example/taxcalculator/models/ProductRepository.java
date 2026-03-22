@@ -10,8 +10,8 @@ import com.example.taxcalculator.database.ProductDao;
 import com.example.taxcalculator.utils.BarcodeRouter;
 import com.example.taxcalculator.utils.FirestoreHelper;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,8 +31,16 @@ public class ProductRepository {
     private final ProductDao productDao;
     private final ExecutorService executorService;
     private final AtomicBoolean isSearchActive = new AtomicBoolean(false);
-    private final AtomicInteger failureCount = new AtomicInteger(0);
-    private final List<Call<ProductResponse>> activeCalls = new ArrayList<>();
+    private final AtomicInteger failureCount   = new AtomicInteger(0);
+
+    // FIX: Replaced ArrayList with CopyOnWriteArrayList.
+    // The previous ArrayList was accessed concurrently from multiple Retrofit callback
+    // threads (food, beauty, product APIs fire in parallel). This caused a potential
+    // ConcurrentModificationException when one thread iterated activeCalls to cancel
+    // while another thread was still adding to it.
+    // CopyOnWriteArrayList handles this safely — writes create a fresh copy of the
+    // underlying array, so iterators never see a half-modified state.
+    private final List<Call<ProductResponse>> activeCalls = new CopyOnWriteArrayList<>();
 
     /**
      * Interface for handling asynchronous data operations.
@@ -45,7 +53,7 @@ public class ProductRepository {
 
     /**
      * Interface for handling product scanning results.
-     * defines callbacks for different outcomes of a product search.
+     * Defines callbacks for different outcomes of a product search.
      */
     public interface ScanCallback {
         void onCloudFound(ProductItem item);
@@ -63,7 +71,7 @@ public class ProductRepository {
      */
     public ProductRepository(Application application) {
         AppDatabase db = AppDatabase.getInstance(application);
-        productDao = db.productDao();
+        productDao     = db.productDao();
         executorService = Executors.newSingleThreadExecutor();
     }
 
@@ -74,8 +82,12 @@ public class ProductRepository {
      */
     public void getAllProducts(DataCallback<List<ProductItem>> callback) {
         executorService.execute(() -> {
-            List<ProductItem> data = productDao.getAll();
-            callback.onSuccess(data);
+            try {
+                List<ProductItem> data = productDao.getAll();
+                callback.onSuccess(data);
+            } catch (Exception e) {
+                callback.onFailure("Failed to load products: " + e.getMessage());
+            }
         });
     }
 
@@ -87,9 +99,13 @@ public class ProductRepository {
      */
     public void insertProduct(ProductItem item, DataCallback<Void> callback) {
         executorService.execute(() -> {
-            productDao.insert(item);
-            FirestoreHelper.uploadProduct(item);
-            callback.onSuccess(null);
+            try {
+                productDao.insert(item);
+                FirestoreHelper.uploadProduct(item);
+                callback.onSuccess(null);
+            } catch (Exception e) {
+                callback.onFailure("Failed to save product: " + e.getMessage());
+            }
         });
     }
 
@@ -100,8 +116,12 @@ public class ProductRepository {
      */
     public void deleteAllProducts(DataCallback<Void> callback) {
         executorService.execute(() -> {
-            productDao.deleteAll();
-            callback.onSuccess(null);
+            try {
+                productDao.deleteAll();
+                callback.onSuccess(null);
+            } catch (Exception e) {
+                callback.onFailure("Failed to clear history: " + e.getMessage());
+            }
         });
     }
 
@@ -170,9 +190,11 @@ public class ProductRepository {
             public void onResponse(Call<ProductResponse> call, Response<ProductResponse> response) {
                 if (!isSearchActive.get()) return;
 
-                if (response.isSuccessful() && response.body() != null && response.body().status == 1) {
+                if (response.isSuccessful()
+                        && response.body() != null
+                        && response.body().status == 1) {
                     if (declareWinner()) {
-                        String name = response.body().product.getBestName();
+                        String name  = response.body().product.getBestName();
                         String brand = response.body().product.brands;
                         callback.onApiFound(name, brand, barcode);
                     }
@@ -218,7 +240,9 @@ public class ProductRepository {
             public void onResponse(Call<UpcItemResponse> call, Response<UpcItemResponse> response) {
                 if (!isSearchActive.get()) return;
 
-                if (response.isSuccessful() && response.body() != null && response.body().total > 0) {
+                if (response.isSuccessful()
+                        && response.body() != null
+                        && response.body().total > 0) {
                     isSearchActive.set(false);
                     UpcItemResponse.UpcItem item = response.body().items.get(0);
                     callback.onApiFound(item.title, item.brand, barcode);

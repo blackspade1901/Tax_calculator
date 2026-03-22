@@ -36,11 +36,16 @@ public abstract class AppDatabase extends RoomDatabase {
         if (INSTANCE == null) {
             synchronized (AppDatabase.class) {
                 if (INSTANCE == null) {
-                    INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
-                                    AppDatabase.class, "tax_history_db")
-                            // Allows database queries on the main thread (Note: Not recommended for large operations in production)
-                            .allowMainThreadQueries()
-                            // Wipes and rebuilds the database if the schema version changes, preventing crashes during development
+                    INSTANCE = Room.databaseBuilder(
+                                    context.getApplicationContext(),
+                                    AppDatabase.class,
+                                    "tax_history_db"
+                            )
+                            // FIX: Removed allowMainThreadQueries().
+                            // All DB operations are already routed through ExecutorService
+                            // in ProductRepository, so this flag was never needed.
+                            // Room will now correctly enforce background-thread-only access,
+                            // preventing UI jank and ANR crashes on low-end devices.
                             .fallbackToDestructiveMigration()
                             .build();
                 }

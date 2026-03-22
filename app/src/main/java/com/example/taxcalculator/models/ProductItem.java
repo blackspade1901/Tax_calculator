@@ -2,7 +2,9 @@ package com.example.taxcalculator.models;
 
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
+
 import com.example.taxcalculator.utils.TaxManager;
+
 import java.io.Serializable;
 
 /**
@@ -19,112 +21,124 @@ public class ProductItem implements Serializable {
     @PrimaryKey(autoGenerate = true)
     public int id;
 
-    /**
-     * The name of the product.
-     */
     private String name;
-
-    /**
-     * The brand name of the product.
-     */
     private String brand;
 
-    /**
-     * The Maximum Retail Price (MRP) of the product.
-     */
+    /** The Maximum Retail Price (MRP) — tax inclusive. */
     private double price;
 
-    /**
-     * The identifier for the tax category associated with this product.
-     * Used to lookup the dynamic tax rate.
-     */
+    /** The identifier for the tax category (used to look up rate in TaxManager). */
     private String taxCategory;
 
-    /**
-     * The barcode string associated with the product.
-     */
     private String barcode;
 
-    /**
-     * Constructs a new ProductItem.
-     *
-     * @param name        The name of the product.
-     * @param brand       The brand of the product.
-     * @param price       The price of the product.
-     * @param taxCategory The tax category ID for the product.
-     * @param barcode     The scanned barcode of the product.
-     */
-    public ProductItem(String name, String brand, double price, String taxCategory, String barcode) {
-        this.name = name;
-        this.brand = brand;
-        this.price = price;
+    public ProductItem(String name, String brand, double price,
+                       String taxCategory, String barcode) {
+        this.name        = name;
+        this.brand       = brand;
+        this.price       = price;
         this.taxCategory = taxCategory;
-        this.barcode = barcode;
+        this.barcode     = barcode;
     }
 
-    /**
-     * Gets the name of the product.
-     * @return The product name.
-     */
-    public String getName() { return name; }
+    // ─── Getters ────────────────────────────────────────────────────────────
 
-    /**
-     * Gets the brand of the product.
-     * @return The brand name.
-     */
-    public String getBrand() { return brand; }
-
-    /**
-     * Gets the price of the product.
-     * @return The product price (MRP).
-     */
-    public double getPrice() { return price; }
-
-    /**
-     * Gets the barcode of the product.
-     * @return The barcode string.
-     */
-    public String getBarcode() { return barcode; }
-
-    /**
-     * Gets the tax category ID of the product.
-     * @return The tax category ID.
-     */
+    public String getName()        { return name; }
+    public String getBrand()       { return brand; }
+    public double getPrice()       { return price; }
+    public String getBarcode()     { return barcode; }
     public String getTaxCategory() { return taxCategory; }
 
+    // ─── Tax Calculations ───────────────────────────────────────────────────
+
     /**
-     * Retrieves the current tax rate for the product's category.
-     * Queries the TaxManager for the rate associated with the stored category ID.
+     * Retrieves the applicable GST rate for this product's category.
+     * Delegates to TaxManager singleton.
      *
-     * @return The tax rate as a percentage (e.g., 18.0).
+     * @return Tax rate as a percentage (e.g. 18.0 for 18%).
      */
     public double getTaxRate() {
         return TaxManager.getInstance().getRate(taxCategory);
     }
 
     /**
-     * Calculates the tax amount included in the price.
-     * Formula: (Price * TaxRate) / (100 + TaxRate)
+     * Calculates the total GST amount embedded in the MRP.
+     * Formula: (MRP × Rate) / (100 + Rate)
+     * This is the "tax-inclusive" reverse calculation — correct for Indian MRP pricing.
      *
-     * @return The calculated tax amount.
+     * Example: MRP ₹118, Rate 18% → Tax = (118 × 18) / (100 + 18) = ₹18.00
+     *
+     * @return Total GST amount (CGST + SGST combined).
      */
     public double getTaxAmount() {
         return (price * getTaxRate()) / (100 + getTaxRate());
     }
 
     /**
-     * Calculates the net price of the product before tax.
-     * Formula: Price - TaxAmount
+     * Calculates the net price before GST (the actual cost of the product).
+     * Formula: MRP − TaxAmount
      *
-     * @return The net price.
+     * @return Net price excluding GST.
      */
     public double getNetPrice() {
         return price - getTaxAmount();
     }
 
     /**
-     * Returns the total price of the product (same as MRP).
-     * @return The total price.
+     * Returns the MRP (same as the stored price, tax-inclusive).
+     *
+     * @return Total price / MRP.
      */
-    public double getTotalPrice() { return price; }
+    public double getTotalPrice() {
+        return price;
+    }
+
+    // ─── CGST / SGST Split ──────────────────────────────────────────────────
+
+    /**
+     * Calculates the Central GST (CGST) component.
+     *
+     * In India, for intrastate supply, the total GST is always split equally:
+     *   Total GST = CGST + SGST (50% each)
+     * For interstate supply it would be IGST only — but since this app targets
+     * retail consumers buying at MRP (intrastate), CGST/SGST split is the norm.
+     *
+     * Formula: TaxAmount / 2
+     *
+     * Example: 18% GST on ₹118 MRP → Total tax ₹18 → CGST = ₹9, SGST = ₹9
+     *
+     * @return CGST amount (half of total tax amount).
+     */
+    public double getCGST() {
+        return getTaxAmount() / 2;
+    }
+
+    /**
+     * Calculates the State GST (SGST) component.
+     * Always equal to CGST for intrastate retail transactions.
+     *
+     * @return SGST amount (half of total tax amount).
+     */
+    public double getSGST() {
+        return getTaxAmount() / 2;
+    }
+
+    /**
+     * Returns the CGST rate as a percentage (half of total GST rate).
+     * Useful for displaying "CGST @ 9%" on the product card.
+     *
+     * @return CGST rate (e.g. 9.0 for an 18% GST product).
+     */
+    public double getCGSTRate() {
+        return getTaxRate() / 2;
+    }
+
+    /**
+     * Returns the SGST rate as a percentage (half of total GST rate).
+     *
+     * @return SGST rate (e.g. 9.0 for an 18% GST product).
+     */
+    public double getSGSTRate() {
+        return getTaxRate() / 2;
+    }
 }

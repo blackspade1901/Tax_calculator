@@ -1,4 +1,3 @@
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -87,4 +86,51 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
+}
+
+// --- FIX: Custom Javadoc Task to handle encoding and Android dependencies ---
+tasks.register<Javadoc>("generateJavadoc") {
+    group = "Reporting"
+    description = "Generates Javadoc for the application."
+
+    // Access AppExtension to get source sets and variants
+    val androidExtension = project.extensions.getByType(com.android.build.gradle.AppExtension::class.java)
+    val mainSourceSet = androidExtension.sourceSets.getByName("main")
+
+    // Source files (Java)
+    source(mainSourceSet.java.srcDirs)
+
+    // Exclude generated files
+    exclude("**/R.java", "**/BuildConfig.java")
+
+    // Set classpath including Android boot classpath and compile dependencies
+    doFirst {
+        val debugVariant = androidExtension.applicationVariants.find { it.name == "debug" }
+        if (debugVariant != null) {
+            classpath = files(
+                androidExtension.bootClasspath,
+                debugVariant.javaCompileProvider.get().classpath
+            )
+        }
+    }
+
+    options {
+        this as StandardJavadocDocletOptions
+        // Ensure UTF-8 encoding to prevent errors with special characters
+        encoding = "UTF-8"
+        charSet = "UTF-8"
+        docEncoding = "UTF-8"
+        
+        // Disable strict doclint to prevent failure on missing @param tags or HTML errors
+        addStringOption("Xdoclint:none", "-quiet")
+        
+        windowTitle = "TrueRate Tax Calculator API"
+        docTitle = "TrueRate Tax Calculator API"
+        memberLevel = org.gradle.external.javadoc.JavadocMemberLevel.PROTECTED
+        links("https://developer.android.com/reference/")
+        links("https://docs.oracle.com/javase/8/docs/api/")
+    }
+    
+    // Prevent task failure on minor Javadoc errors
+    isFailOnError = false
 }

@@ -25,10 +25,10 @@ import com.example.taxcalculator.utils.TaxManager;
  */
 public class ProductDialogFragment extends DialogFragment {
 
-    private static final String ARG_NAME = "name";
-    private static final String ARG_BRAND = "brand";
-    private static final String ARG_BARCODE = "barcode";
-    private static final String ARG_PRICE = "price";
+    private static final String ARG_NAME       = "name";
+    private static final String ARG_BRAND      = "brand";
+    private static final String ARG_BARCODE    = "barcode";
+    private static final String ARG_PRICE      = "price";
     private static final String ARG_CATEGORY_ID = "category_id";
 
     /**
@@ -62,7 +62,9 @@ public class ProductDialogFragment extends DialogFragment {
      * @param categoryId The ID of the tax category (can be null).
      * @return A new instance of ProductDialogFragment.
      */
-    public static ProductDialogFragment newInstance(String name, String brand, String barcode, double price, String categoryId) {
+    public static ProductDialogFragment newInstance(String name, String brand,
+                                                    String barcode, double price,
+                                                    String categoryId) {
         ProductDialogFragment fragment = new ProductDialogFragment();
         Bundle args = new Bundle();
         args.putString(ARG_NAME, name);
@@ -78,7 +80,7 @@ public class ProductDialogFragment extends DialogFragment {
      * Called to build the custom dialog container.
      * Inflates the layout, binds views, populates data, and sets up listeners.
      *
-     * @param savedInstanceState The last saved instance state of the Fragment, or null if this is a fresh creation.
+     * @param savedInstanceState The last saved instance state of the Fragment, or null.
      * @return A new Dialog instance to be displayed.
      */
     @NonNull
@@ -89,18 +91,18 @@ public class ProductDialogFragment extends DialogFragment {
         View view = inflater.inflate(R.layout.dialog_add_product, null);
         builder.setView(view);
 
-        String name = getArguments().getString(ARG_NAME, "");
-        String brand = getArguments().getString(ARG_BRAND, "");
-        String barcode = getArguments().getString(ARG_BARCODE, "");
-        double price = getArguments().getDouble(ARG_PRICE, 0.0);
+        String name       = getArguments().getString(ARG_NAME, "");
+        String brand      = getArguments().getString(ARG_BRAND, "");
+        String barcode    = getArguments().getString(ARG_BARCODE, "");
+        double price      = getArguments().getDouble(ARG_PRICE, 0.0);
         String categoryId = getArguments().getString(ARG_CATEGORY_ID);
 
-        EditText inputName = view.findViewById(R.id.inputName);
+        EditText inputName  = view.findViewById(R.id.inputName);
         EditText inputBrand = view.findViewById(R.id.inputBrand);
         EditText inputPrice = view.findViewById(R.id.inputPrice);
-        Spinner taxSpinner = view.findViewById(R.id.taxSpinner);
-        Button btnSave = view.findViewById(R.id.btnSave);
-        Button btnCancel = view.findViewById(R.id.btnCancel);
+        Spinner taxSpinner  = view.findViewById(R.id.taxSpinner);
+        Button btnSave      = view.findViewById(R.id.btnSave);
+        Button btnCancel    = view.findViewById(R.id.btnCancel);
         TextView lblTaxCategory = view.findViewById(R.id.lblTaxCategory);
 
         inputName.setText(name);
@@ -120,7 +122,11 @@ public class ProductDialogFragment extends DialogFragment {
                 TaxManager.CAT_LUXURY
         };
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, displayCategories);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_spinner_item,
+                displayCategories
+        );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         taxSpinner.setAdapter(adapter);
 
@@ -134,7 +140,8 @@ public class ProductDialogFragment extends DialogFragment {
         } else {
             // Heuristic to guess category based on name keywords
             String currentName = name.toLowerCase();
-            if (currentName.contains("sprite") || currentName.contains("coke") || currentName.contains("tobacco")) {
+            if (currentName.contains("sprite") || currentName.contains("coke")
+                    || currentName.contains("tobacco")) {
                 taxSpinner.setSelection(3);
             } else if (currentName.contains("milk") || currentName.contains("curd")) {
                 taxSpinner.setSelection(0);
@@ -147,36 +154,65 @@ public class ProductDialogFragment extends DialogFragment {
 
         AlertDialog dialog = builder.create();
         if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            dialog.getWindow().setBackgroundDrawable(
+                    new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT)
+            );
         }
 
         btnSave.setOnClickListener(v -> {
-            String finalName = inputName.getText().toString().isEmpty() ? "Unknown Item" : inputName.getText().toString();
-            String finalBrand = inputBrand.getText().toString().isEmpty() ? "Generic" : inputBrand.getText().toString();
-            String priceStr = inputPrice.getText().toString();
+            String finalName  = inputName.getText().toString().isEmpty()
+                    ? "Unknown Item" : inputName.getText().toString();
+            String finalBrand = inputBrand.getText().toString().isEmpty()
+                    ? "Generic" : inputBrand.getText().toString();
+            String priceStr   = inputPrice.getText().toString().trim();
 
-            if (!priceStr.isEmpty()) {
-                double finalPrice = Double.parseDouble(priceStr);
-                int selectedPos = taxSpinner.getSelectedItemPosition();
-                String selectedCategory = categoryIds[selectedPos];
-
-                ProductItem newItem = new ProductItem(finalName, finalBrand, finalPrice, selectedCategory, barcode);
-
-                if (listener != null) {
-                    listener.onProductSaved(newItem);
-                }
-                dismiss();
-            } else {
-                inputPrice.setError("Required");
+            // FIX: Guard against empty input first
+            if (priceStr.isEmpty()) {
+                inputPrice.setError("Price is required");
+                return;
             }
+
+            // FIX: Wrap parseDouble in try-catch to prevent NumberFormatException crash.
+            // Previously, malformed input like "1.2.3" or pasted text would crash the app.
+            // Now we show a clear error message on the field instead.
+            double finalPrice;
+            try {
+                finalPrice = Double.parseDouble(priceStr);
+            } catch (NumberFormatException e) {
+                inputPrice.setError("Enter a valid number (e.g. 149.99)");
+                return;
+            }
+
+            // Guard against zero or negative prices
+            if (finalPrice <= 0) {
+                inputPrice.setError("Price must be greater than 0");
+                return;
+            }
+
+            int selectedPos       = taxSpinner.getSelectedItemPosition();
+            String selectedCategory = categoryIds[selectedPos];
+
+            ProductItem newItem = new ProductItem(
+                    finalName, finalBrand, finalPrice, selectedCategory, barcode
+            );
+
+            if (listener != null) {
+                listener.onProductSaved(newItem);
+            }
+            dismiss();
         });
 
         btnCancel.setOnClickListener(v -> dismiss());
 
         lblTaxCategory.setOnClickListener(v -> {
             new AlertDialog.Builder(requireContext())
-                    .setTitle("GST Tax Slabs Guide (2025)")
-                    .setMessage("• 0% (Exempt): Fresh vegetables, Milk...\n• 5% (Daily-use): Soaps, Tea...\n• 18% (Standard): Electronics...\n• 40% (Luxury): Tobacco, Soda...")
+                    .setTitle("GST Tax Slabs Guide (2026)")
+                    .setMessage(
+                            "• 0% (Exempt): Fresh vegetables, Milk, Books...\n" +
+                                    "• 5% (Daily-use): Soaps, Tea, Medicines...\n" +
+                                    "• 18% (Standard): Electronics, Restaurants...\n" +
+                                    "• 40% (Sin/Luxury): Tobacco, Aerated drinks, Premium cars..."
+                    )
                     .setPositiveButton("Got it", null)
                     .show();
         });
